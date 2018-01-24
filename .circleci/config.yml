@@ -1,0 +1,45 @@
+# PHP CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-php/ for more details
+#
+version: 2
+jobs:
+    build:
+        docker:
+            - image: circleci/php:7.1.13-apache-browsers
+        working_directory: ~/sandbox
+
+        steps:
+            - checkout
+
+            # Apache
+            - run: echo 127.0.0.1 sandbox | sudo tee -a /etc/hosts
+            - run: ls /etc/apache2/
+            - run: ls /etc/apache2/sites-available/
+            - run: echo '<VirtualHost *:80>'                            | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo   'DocumentRoot /home/circleci/sandbox/public'  | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo   'ServerName sandbox'                          | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo   "<Directory '/home/circleci/sandbox/public'>" | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo     'Options FollowSymLinks'                    | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo     'AllowOverride All'                         | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo     'Require all granted'                       | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo   '</Directory>'                                | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: echo '</VirtualHost>'                                | sudo tee -a /etc/apache2/sites-available/sandbox.conf
+            - run: sudo cat /etc/apache2/sites-available/sandbox.conf
+            - run: sudo a2ensite sandbox
+            - run: sudo service apache2 start
+
+            # Download and cache dependencies
+            - restore_cache:
+                keys:
+                    - composer-v1-{{ checksum "composer.json" }}
+                    - composer-v1-
+            - run: composer require hirak/prestissimo --no-progress --no-ansi --no-interaction
+            - run: composer install --no-progress --no-ansi --no-interaction
+            - save_cache:
+                key: v1-dependencies-{{ checksum "composer.json" }}
+                paths:
+                    - vendor
+
+            # run tests!
+            - run: composer test
