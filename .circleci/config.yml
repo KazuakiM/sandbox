@@ -20,5 +20,5 @@ jobs:
                 name: PHP
                 command: |
                     sudo pecl channel-update pecl.php.net
-                    #printf "/usr/src/php/ext/\n" | sudo pecl install uuid
+                    yes | sudo pecl install uuid
                     #sudo docker-php-ext-install pdo pdo_mysql uuid
