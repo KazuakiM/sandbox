@@ -14,11 +14,13 @@ jobs:
 
             - run:
                 name: Ubuntu
-                command: sudo apt install uuid-dev
+                command: |
+                  sudo apt update
+                  sudo apt install mysql-server uuid-dev
+
 
             - run:
                 name: PHP
                 command: |
                     sudo pecl channel-update pecl.php.net
-                    yes | sudo pecl install uuid
-                    #sudo docker-php-ext-install pdo pdo_mysql uuid
+                    sudo pecl install uuid
